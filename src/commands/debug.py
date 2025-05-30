@@ -61,7 +61,7 @@ def save_explanation(file_path: Path, explanation: str) -> Path:
 @app.command()
 def explain(
     file: Path = typer.Argument(..., exists=True, readable=True, help="The code file to explain."),
-    model: str = typer.Option("llama3:1b", help="Ollama model to use.")
+    model: str = typer.Option("llama3.2:1b", help="Ollama model to use.")
 ):
     """
     Explain a code file using a local LLM via Ollama.
