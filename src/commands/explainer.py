@@ -5,7 +5,7 @@ import typer
 app = typer.Typer()
 
 @app.command()
-def file(file: str, model: str = "llama3:1b"):
+def file(file: str, model: str = "llama3.2:1b"):
     """Generate explanation for the code file"""
     try:
         with open(file, 'r', encoding='utf-8') as f:

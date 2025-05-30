@@ -3,20 +3,22 @@ import os
 import subprocess
 import typer
 from typing import Optional
+from pathlib import Path  
 
 # Initialize Typer app
 app = typer.Typer()
 
-def generate_explanation(file_path: str, model_name: str = "llama3:1b") -> Optional[str]:
+def generate_explanation(file_path: str, model_name: str = "llama3.2:1b") -> Optional[str]:
     """
     Generate an explanation for the given code file using Ollama
-    """
+    """  
     try:
-        # Read the file content with UTF-8 encoding
-        with open(file_path, 'r', encoding='utf-8') as file:
+        resolved_path = Path(file_path).resolve()  # Resolves absolute path
+        typer.echo(f"Reading file: {resolved_path}")
+
+        with open(resolved_path, 'r', encoding='utf-8') as file:
             code_content = file.read()
-        
-        # Create the prompt
+
         prompt = f"""Please review and explain the following code. 
 If it contains any syntax errors, logic errors, or potential bugs, identify and explain them clearly.
 Then describe the code's purpose, key functions, and structure.
@@ -25,9 +27,8 @@ Here is the code:
 
 {code_content}
 """
-        typer.echo(f"Generating explanation for {file_path}...")
+        typer.echo(f"Generating explanation using model: {model_name}...")
 
-        # Run ollama model and send the prompt to stdin
         process = subprocess.Popen(
             ["ollama", "run", model_name],
             stdin=subprocess.PIPE,
@@ -35,35 +36,33 @@ Here is the code:
             stderr=subprocess.PIPE
         )
 
-        # Encode prompt and communicate with subprocess
         stdout, stderr = process.communicate(input=prompt.encode('utf-8'))
 
-        # Decode output using utf-8 to avoid UnicodeDecodeError
         stdout = stdout.decode('utf-8', errors='replace')
         stderr = stderr.decode('utf-8', errors='replace')
 
         if process.returncode != 0:
-            typer.echo(f"Error generating explanation:\n{stderr}", err=True)
+            typer.echo(f"[ERROR] Ollama error:\n{stderr}", err=True)
             return None
 
         return stdout
 
     except Exception as e:
-        typer.echo(f"An error occurred: {str(e)}", err=True)
+        typer.echo(f"[EXCEPTION] {str(e)}", err=True)
         return None
 
 def save_explanation(file_path: str, explanation: str) -> str:
     """
     Save the explanation to a text file
     """
-    base_name = os.path.splitext(file_path)[0]
-    output_file = f"{base_name}_explanation.txt"
+    resolved_path = Path(file_path).resolve()
+    output_file = resolved_path.with_name(f"{resolved_path.stem}_explanation.txt")
 
     with open(output_file, 'w', encoding='utf-8') as file:
         file.write(explanation)
 
-    typer.echo(f"Explanation saved to {output_file}")
-    return output_file
+    typer.echo(f"[✓] Explanation saved to: {output_file}")
+    return str(output_file)
 
 @app.command()
 def explain(
@@ -73,13 +72,15 @@ def explain(
     """
     Review and explain code, identifying any errors or potential bugs.
     """
-    if not os.path.isfile(file):
-        typer.echo(f"Error: File '{file}' not found", err=True)
+    resolved_path = Path(file).resolve()
+
+    if not resolved_path.is_file():
+        typer.echo(f"[ERROR] File not found: {resolved_path}", err=True)
         raise typer.Exit(1)
 
-    explanation = generate_explanation(file, model)
+    explanation = generate_explanation(str(resolved_path), model)
     if explanation:
-        save_explanation(file, explanation)
+        save_explanation(str(resolved_path), explanation)
 
 if __name__ == "__main__":
     app()

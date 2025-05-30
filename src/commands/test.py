@@ -6,7 +6,7 @@ from typing import Optional
 
 app = typer.Typer(help="Edge Case Generator using Ollama")
 
-def generate_edge_cases(file_path: str, model_name: str = "llama3:1b") -> Optional[str]:
+def generate_edge_cases(file_path: str, model_name: str = "llama3.2:1b") -> Optional[str]:
     """
     Generate comprehensive edge test cases using Ollama
     """
