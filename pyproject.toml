@@ -1,0 +1,16 @@
+[project]
+name = "code_tool"
+version = "0.1.0"
+description = "CLI tool to explain, test, debug, and optimize code using LLMs"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "typer[all]"
+]
+
+[project.scripts]
+code-tool = "src.cli:app"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
